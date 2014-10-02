@@ -90,6 +90,14 @@ Create a color Look Up Table (LUT) coded plot in Chips.
         >>> c = ChipsCurve()
         >>> c.symbol.style = 'circle'
         >>> lut.set_curve(c)
+    
+    LUTPlot.shuffle()
+        
+        The shuffle command can be used to shuffle the order curves
+        are drawn in which can be useful when the curves overlap.
+        
+        >>> lut.shuffle()
+        
         
     
 
@@ -122,6 +130,22 @@ class LUTPlot(object):
     
     """    
 
+    num_colors = None
+    filename = None
+    cmap = None
+    curves = None
+    image = None
+    min_z = None
+    max_z = None
+    rx = None
+    ry = None
+    lut_win = None
+    lut_frame = None
+    lut_plot = None
+    old_win = None
+    old_frame = None
+    old_plot = None
+    order = None
 
     @staticmethod
     def _try_hard_to_locate( filename ):
@@ -155,6 +179,9 @@ class LUTPlot(object):
 
 
     def _create_hex_codes( self, rr, gg, bb ):
+        """
+        Store the 6digit hex color code for each curve/color
+        """
         self.hex_codes = []
         
         red = map( self._hexify, rr )
@@ -163,13 +190,37 @@ class LUTPlot(object):
         
         self.hex_codes = map( lambda r,g,b: r+g+b, red, grn, blu )
 
-        #for ii in xrange(len(rr)):
-        #    self.hex_codes.append( self._hexify(rr[ii])+self._hexify(gg[ii])+self._hexify(bb[ii]) )
 
 
     def __init__( self, filename, cmap=chips_usercmap1, reverse=False, invert=False ):
         """
         Load the color map file values and set the chips user color map.
+        
+        >>> lut = LUTPlot( "/soft/ciao/data/bb.lut")
+        
+        The object will try to locate the color table by name
+        based on common locations where it might be.  
+        
+        >>> lut = LUTPlot( "bb" )
+        
+        Alternatively users can use the paramio module to locate files:
+        
+        >>> from paramio import pget
+        >>> lut = LUTPlot( pget("imagej_lut", "heart")) 
+        
+        By default the object uses the 1st user color map slot
+        "chip_usercmap1",  this can be changed with the cmap
+        parameter:
+        
+        >>> lut = LUTPlot( "heart", cmap=chips_usercmap2 )
+        
+        The color map can be manipulated in two ways.  The order of the
+        colors reverse, and/or the colors themselves inverted
+        
+        >>> lut = LUTPlot( "bb", reverse=True )
+        >>> lut = LUTPlot( "bb", invert=True )
+        >>> lut = LUTPlot( "bb", invert=True, reverse=True )
+
         """
         if cmap not in [chips_usercmap1,chips_usercmap2,chips_usercmap3]:
             raise ValueError("Invalid color map selected")
@@ -177,29 +228,11 @@ class LUTPlot(object):
 
         rr,gg,bb = self._get_rgb( filename, reverse=reverse, invert=invert )
 
-        try:
-            # new in ciao 4.6
-            load_colormap( rr,gg,bb, cmap )
-        except:
-            load_colormap( filename, cmap )
+        load_colormap( rr,gg,bb, cmap )          # new in ciao4.6, load from arrays
 
         self.num_colors = len(self.hex_codes)
         self.filename = filename
         self.cmap = cmap
-        self.curves = None
-        self.image = None
-        self.min_z = None
-        self.max_z = None
-        self.rx = None
-        self.ry = None
-        self.lut_win = None
-        self.lut_frame = None
-        self.lut_plot = None
-        self.old_win = None
-        self.old_frame = None
-        self.old_plot = None
-        self.order = None
-
         
     def _hexify( self, value ):
         """
@@ -222,8 +255,11 @@ class LUTPlot(object):
 
     def _get_rgb( self, filename, reverse=False, invert=False ):
         """
+        Load the color lookup table.
         
+        Conver the rgb values into their 6digit hex color code
         """
+
         myclr = self._try_hard_to_locate(filename)        
         rr = get_colvals(myclr, 0)*1.0 # multiply by 1.0 detach from crate        
         gg = get_colvals(myclr, 1)*1.0
@@ -249,13 +285,23 @@ class LUTPlot(object):
         This utility routine can be used to change the color map of 
         and existing series plot.
 
-        Example:
-            >>> lut.replace_cmap( "/soft/ciao/data/bb.lut")
+        
+        >>> lut.replace_cmap( "/soft/ciao/data/bb.lut")
+
+        As with the init routine, the color map can be 
+        auto-located, reversed, or inverted.
+
+        >>> lut.replace_cmap("16_colors")
+        >>> lut.replace_cmap("heart", invert=True )
+        >>> lut.replace_cmap("standard", reverse=True )
+        
+        The color map that is loaded must have the same number of
+        colors as the original or an exception is raised.
 
         """
         
         open_undo_block()
-        self._set_lut_window()
+        self._set_lut_window()  # save current window/frame/plot info
 
         if not self.curves:
             close_undo_block()
@@ -267,16 +313,13 @@ class LUTPlot(object):
         rr,gg,bb = self._get_rgb( filename, reverse=reverse, invert=invert )
 
         if len(rr) != self.num_colors:
+            self._restore_window()
             close_undo_block()
             raise IOError("New lookup table must have same number of colors as previous table")
 
         self.filename = filename
 
-        try:
-            # new in ciao 4.6
-            load_colormap( rr, gg, bb, self.cmap )
-        except:
-            load_colormap( filename, self.cmap )
+        load_colormap( rr, gg, bb, self.cmap )
         
         if self.image:
             set_image(self.image, "colormap={}".format(self.cmap))
@@ -298,7 +341,6 @@ class LUTPlot(object):
         This can only be retrieved by parsing the info_current() command.
         """
         ii = info_current().split("\n")
-        #ff = filter( lambda x: name in x, ii )
         ff = filter( lambda x: x.strip().startswith(name), ii )
         ff = ff[-1] # last one
         name = ff.split("[")[1]
@@ -351,18 +393,38 @@ class LUTPlot(object):
         """
         Plots the X, Y for each Z slice color coded by the LUT
     
+        >>> x = np.random.rand(100)
+        >>> y = np.random.rand(100)
+        >>> z = np.arange(100)
+        >>> lut.plot( x, y, z )
+
         The ZZ values are split into an equal number of bins going from
         min(zz) to max(zz).  The number of bins is equal to the 
-        number of colors in the rr,gg,bb arrays.
+        number of colors in LUT.  The zgrid can be
+        explicitly input but must have the same number of grid
+        points as the number of colors
+
+        >>> zlo = np.arange(256)
+        >>> zhi = zlo + 1
+        >>> zlo[0] = -999
+        >>> zhi[-1] = 999
+        >>> zgrid = zip(zlo,zhi)
+        >>> plot(x, y, z, zgrid=zgrid)
+                
+        Note:  The color bar tick labels will not correctly 
+        show the arbitrary zgrid values.
+
 
         A curve is created for each color.  All the curves have 
         a name that starts with the prefix "lutpoint" which can
         be changed using the 'name' argument.
 
-        Example:
-        
-            >>> lut.plot( x, y, z )
-        
+        >>> plot(x, y, z, name="asoldata")
+        >>> info()
+           ...
+              Curve [asoldata1]
+
+
         """    
         if self.curves:
             raise RuntimeError("The same object cannot be used to plot multiple series")
@@ -432,7 +494,17 @@ class LUTPlot(object):
 
     def set_curve( self, args ):
         """
-        Loop thru curves appling args
+        Loop thru curves appling the style to each
+
+        >>> lut.set_curve("symbol.style=circle")
+        >>> lut.set_curve( ["symbol.size", "3"] )
+        >>> lut.set_curve( { "symbol.fill" : True } )
+        >>> cc = ChipsCurve()
+        >>> cc.symbol.angle = 270
+        >>> lut.set_curve(cc)
+
+        Users should not set the color parameters.
+
         """        
         open_undo_block()
         self._set_lut_window()
@@ -448,6 +520,9 @@ class LUTPlot(object):
     def shuffle( self ):
         """
         Shuffle the curves so that 1st is last
+        
+        >>> lut.shuffle()
+
         """
         
         cc = map(None, self.curves)
@@ -514,8 +589,6 @@ class LUTPlot(object):
         
         close_undo_block()
     
-    def get_num_colors(self):
-        return self.num_colors
 
 
 def __test():
@@ -528,7 +601,7 @@ def __test():
     x = tab.get_column("dy").values
     y = tab.get_column("dz").values
     z = tab.get_column("time").values
-    z= z-min(z)
+    z= (z-min(z))/1000.0 # offset and convert to ksec
     from paramio import pget 
     lut = LUTPlot( pget("imagej_lut", "16_equal"), cmap=chips_usercmap2)
     clear()
@@ -537,7 +610,10 @@ def __test():
     lut.add_colorbar( )
 
     lut.set_curve( "symbol.style=circle")
+    lut.set_curve( { 'symbol.size' : 2 } )
     
     lut.replace_cmap( pget("imagej_lut", "005-random"))
+    lut.shuffle()
+    
 
 
