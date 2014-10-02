@@ -62,6 +62,31 @@ class BoxWhiskerPlot(LUTPlot):
     >>> b.set_line( ['thickness', '3.0' ])
     >>> b.set_point( { 'style' : 'square' } )
     
+    The number of values in each of the grids can be color coded
+    using the colorize method.  It takes the name of a
+    color lookup table
+    
+    >>> bb.colorize("/soft/ciao/data/bb.lut")
+
+    The color bar can be set to different values an the plot will
+    be updated.  You can specify the full path or if just the
+    name it will try to locate the file in common CIAO dirs.
+
+    After the data are color coded a color bar can be attached:
+    
+    >>> bb.add_colorbar()
+
+    Note:  There is currently a bug/feature that does not
+    pick up on the region's transparency/opacity setting so
+    the color bar may look different than the box plots.  
+    By default regions are drawn at 70% opacity.    Making
+    another call to colorize should get things updated correctly:
+    
+    >>> bb.colorize("bb")
+    >>> bb.region( "opacity=0.3")
+    >>> bb.add_colorbar()
+    >>> bb.colorize("bb")
+
         
     """
 
