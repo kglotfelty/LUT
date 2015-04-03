@@ -22,6 +22,7 @@
 Create a color Look Up Table (LUT) coded plot in Chips.
 
 
+
     lut = LUTPlot( filename , cmap=chips_usercmap1)
         Create a new plot object with the color lookuptable from the
         specified file name.
