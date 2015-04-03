@@ -1,5 +1,26 @@
+#
+#  Copyright (C) 2015  Smithsonian Astrophysical Observatory
+#
+#
+#  This program is free software; you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation; either version 2 of the License, or
+#  (at your option) any later version.
+#
+#  This program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License along
+#  with this program; if not, write to the Free Software Foundation, Inc.,
+#  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+
+
 """
-Create and manipulate a box-n-whisker style plot
+Create and manipulate a box-n-whisker style plot.
+
 
 """
 
@@ -26,10 +47,8 @@ class BoxWhiskerPlot(LUTPlot):
     The advantage is it allows users to see trends in the data 
     that can be obscured dense scatter plots with limited screen 
     resolution. 
-    
-    >>> from box_whisker import *
-    >>> from pychips import *
-    >>> xx = xx = np.arange(1000)
+
+    >>> xx = np.arange(1000)
     >>> yy = map( lambda x: np.random.uniform(0.0), xx)
     >>> b = BoxWhiskerPlot( xx, yy )
     >>> b.plot()
@@ -66,7 +85,7 @@ class BoxWhiskerPlot(LUTPlot):
     using the colorize method.  It takes the name of a
     color lookup table
     
-    >>> bb.colorize("/soft/ciao/data/bb.lut")
+    >>> b.colorize("/soft/ciao/data/bb.lut")
 
     The color bar can be set to different values an the plot will
     be updated.  You can specify the full path or if just the
@@ -74,7 +93,7 @@ class BoxWhiskerPlot(LUTPlot):
 
     After the data are color coded a color bar can be attached:
     
-    >>> bb.add_colorbar()
+    >>> b.add_colorbar()
 
     Note:  There is currently a bug/feature that does not
     pick up on the region's transparency/opacity setting so
@@ -82,11 +101,10 @@ class BoxWhiskerPlot(LUTPlot):
     By default regions are drawn at 70% opacity.    Making
     another call to colorize should get things updated correctly:
     
-    >>> bb.colorize("bb")
-    >>> bb.region( "opacity=0.3")
-    >>> bb.add_colorbar()
-    >>> bb.colorize("bb")
-
+    >>> b.colorize("bb")
+    >>> b.set_region( "opacity=0.3")
+    >>> b.add_colorbar()
+    >>> b.colorize("bb")
         
     """
 
@@ -432,6 +450,34 @@ class BoxWhiskerPlot(LUTPlot):
         
     def colorize( self,  filename, cmap=chips_usercmap1, reverse=False, invert=False ):
         """
+        Color each histogram bin based on the number of values in the bin.
+        
+
+        The number of values in each of the grids can be color coded
+        using the colorize method.  It takes the name of a
+        color lookup table
+        
+        >>> b.colorize("/soft/ciao/data/bb.lut")
+
+        The color bar can be set to different values an the plot will
+        be updated.  You can specify the full path or if just the
+        name it will try to locate the file in common CIAO dirs.
+
+        After the data are color coded a color bar can be attached:
+        
+        >>> b.add_colorbar()
+
+        Note:  There is currently a bug/feature that does not
+        pick up on the region's transparency/opacity setting so
+        the color bar may look different than the box plots.  
+        By default regions are drawn at 70% opacity.    Making
+        another call to colorize should get things updated correctly:
+        
+        >>> b.colorize("bb")
+        >>> b.set_region( "opacity=0.3")
+        >>> b.add_colorbar()
+        >>> b.colorize("bb")
+
         """
         if cmap not in [chips_usercmap1,chips_usercmap2,chips_usercmap3]:
             raise ValueError("Invalid color map selected")
@@ -467,7 +513,7 @@ class BoxWhiskerPlot(LUTPlot):
             if 0 == sz:
                 continue
             
-            nn = (sz-cmin)/(dc)
+            nn = (sz-cmin)/(dc) if dc > 0 else 0.5
             ii = int(np.floor(self.num_colors * nn))
             ii = ii-1 if ii == self.num_colors else ii
             
@@ -486,6 +532,9 @@ class BoxWhiskerPlot(LUTPlot):
         """
         clear all plot elements associated with this object, only.
         The plot is retained.
+        
+        >>> b.clear()
+        
         """
         
         open_undo_block()
@@ -502,8 +551,8 @@ class BoxWhiskerPlot(LUTPlot):
 
         close_undo_block()
 
-
-    def _get_current_object_name( self, name ):
+    @staticmethod
+    def _get_current_object_name( name ):
         """
         We often need the chips name/id of the current object : curve, axis, etc.
         This can only be retrieved by parsing the info_current() command.

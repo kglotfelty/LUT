@@ -1,3 +1,23 @@
+#
+#  Copyright (C) 2015  Smithsonian Astrophysical Observatory
+#
+#
+#  This program is free software; you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation; either version 2 of the License, or
+#  (at your option) any later version.
+#
+#  This program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License along
+#  with this program; if not, write to the Free Software Foundation, Inc.,
+#  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+
+
 """
 Create a color Look Up Table (LUT) coded plot in Chips.
 
@@ -24,13 +44,19 @@ Create a color Look Up Table (LUT) coded plot in Chips.
         >>> sls_filename = pget( "lut", "sls" )
         >>> lut = LUTPlot( sls_filename )
 
+        The object will also look in standard CIAO data directories
+        for a matching file name:
+        
+        >>> lut = LUTPlot("bb")
+        
+        will load the $ASCDS_INSTALL/data/bb.lut file.
+
         The color lookup table is by default loaded into first
         user color lookup table slot: 'chips_usercmap1'.  This can
         be changed 
         
         >>> lut = LUTPlot( "/soft/ciao/data/grey.lut", cmap=chips_usercmap2)
         
-
     
     LUTPlot.plot( x, y, z, name="lutpoint", zgrid=None)
     
@@ -107,9 +133,13 @@ import numpy as np
 from pychips.advanced import open_undo_block, close_undo_block
 from pychips import *
 from pycrates import read_file, get_colvals
+from hexify import color_by_value
 
 
 __all__ = [ "LUTPlot" ]
+
+
+
 
 
 class LUTPlot(object):
@@ -182,13 +212,7 @@ class LUTPlot(object):
         """
         Store the 6digit hex color code for each curve/color
         """
-        self.hex_codes = []
-        
-        red = map( self._hexify, rr )
-        grn = map( self._hexify, gg )
-        blu = map( self._hexify, bb )
-        
-        self.hex_codes = map( lambda r,g,b: r+g+b, red, grn, blu )
+        self.hex_codes = map( color_by_value, rr, gg, bb )
 
 
 
@@ -234,21 +258,6 @@ class LUTPlot(object):
         self.filename = filename
         self.cmap = cmap
         
-    def _hexify( self, value ):
-        """
-        Convert decimal 0.0-1.0 into a byte 0-255 in hexidecimal
-        """
-        if value < 0 or value > 1:
-            raise ValueError("Color values must be between 0 and 1")
-    
-        val = value * 256
-        ival = int(val)  # truncate
-        if 256 == ival: 
-            ival = 255
-        sval = "{:02X}".format(ival)
-        return sval
-
-
     def _get_color_code( self, ii ):
         return self.hex_codes[ii]
 
@@ -284,7 +293,6 @@ class LUTPlot(object):
         """
         This utility routine can be used to change the color map of 
         and existing series plot.
-
         
         >>> lut.replace_cmap( "/soft/ciao/data/bb.lut")
 
