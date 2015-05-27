@@ -1,26 +1,20 @@
 
 ROOT = /data/lenin2/Scripts/MyStuff/ciao46/ciao-4.6/contrib
-DEST = lib/python2.7/site-packages/chips_contrib/
+DEST = lib/python2.7/site-packages/chips_contrib/lut
 DEV  = /data/da/Docs/scripts/dev
 
-CP_F = /bin/cp -f
+CP_FV = /bin/cp -fv
 
-all: $(ROOT)/$(DEST)/lutplot.py $(ROOT)/$(DEST)/lutbox_whisker.py
+PY_SRC = __init__.py all.py color_curves.py hexify.py lutbox_whisker.py lutcolors.py lutplot.py pick_lut.py
+
+all: 
+	@mkdir -p $(ROOT)/$(DEST)/
+	@$(CP_FV) $(PY_SRC) $(ROOT)/$(DEST)/
+
 
 install: all
 
-$(ROOT)/$(DEST)/lutplot.py : lutplot.py
-	$(CP_F) $< $@
 
-$(ROOT)/$(DEST)/lutbox_whisker.py : lutbox_whisker.py
-	$(CP_F) $< $@
-
-dev: $(DEV)/$(DEST)/lutplot.py  $(DEV)/$(DEST)/lutbox_whisker.py
-
-$(DEV)/$(DEST)/lutplot.py : lutplot.py
-	$(CP_F) $< $@
-
-$(DEV)/$(DEST)/lutbox_whisker.py : lutbox_whisker.py
-	$(CP_F) $< $@
-
-
+dev: 
+	@mkdir -p $(DEV)/$(DEST)/
+	@$(CP_FV) $(PY_SRC) $(DEV)/$(DEST)/
