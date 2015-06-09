@@ -72,7 +72,7 @@ be set adjust the custom color lookup table.
 
 __all__ = [ 'white_to_color', 'black_to_color', 'black_to_color_to_white', 'lut_colors']
 
-
+import numpy as np
 
 def _color_to_tripple( color ):
     """
