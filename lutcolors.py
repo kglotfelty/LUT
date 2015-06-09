@@ -105,7 +105,7 @@ def _check_cmap(fun):
     from functools import wraps
 
     @wraps(fun)
-    def wrapper( color, cmap="usercmap1"):
+    def wrapper( color, cmap="usercmap1", num_colors=256, outfile=None):
         from pychips import info_current, set_image
         from pychips import chips_usercmap1, chips_usercmap2, chips_usercmap3
 
@@ -117,7 +117,7 @@ def _check_cmap(fun):
                 raise ValueError("Unsupported color map slot")
 
         # Do the real work!
-        fun( color, cmap )
+        fun( color, cmap, num_colors, outfile )
         
         ii = info_current()  # If any images, then change set colormap
         if ii and any( map(lambda x: ' Image [' in x, ii.split("\n"))):
@@ -127,7 +127,7 @@ def _check_cmap(fun):
 
 
 @_check_cmap
-def white_to_color(color, cmap="usercmap1"):
+def white_to_color(color, cmap="usercmap1", num_colors=256, outfile=None):
     """
     Create a custom color lookup table that fades from white to 
     the specified color.  The color map is loaded into the 
@@ -137,11 +137,11 @@ def white_to_color(color, cmap="usercmap1"):
     >>> white_to_color("firebrick", chips_usercmap2)    
     >>> white_to_color("slateblue", "usercmap3")
     """
-    lut_colors( ['white', color], cmap)
+    lut_colors( ['white', color], cmap, num_colors, outfile)
 
 
 @_check_cmap
-def black_to_color(color, cmap="usercmap1"):
+def black_to_color(color, cmap="usercmap1", num_colors=256, outfile=None):
     """
     Create a custom color lookup table that fades from black to 
     the specified color. The color map is loaded into the 
@@ -151,11 +151,11 @@ def black_to_color(color, cmap="usercmap1"):
     >>> black_to_color("firebrick", chips_usercmap2)    
     >>> black_to_color("slateblue", "usercmap3")
     """
-    lut_colors( ['black', color], cmap )
+    lut_colors( ['black', color], cmap, num_colors, outfile )
 
 
 @_check_cmap
-def black_to_color_to_white( color, cmap="usercmap1"):
+def black_to_color_to_white( color, cmap="usercmap1", num_colors=256, outfile=None):
     """
     Create a custom color lookup table that fades from black to 
     the specified color to white. The color map is loaded into the 
@@ -166,11 +166,11 @@ def black_to_color_to_white( color, cmap="usercmap1"):
     >>> black_to_color_to_white("orange", cmap="usercmap3")
     
     """
-    lut_colors( ['black', color, 'white'], cmap )
+    lut_colors( ['black', color, 'white'], cmap, num_colors, outfile )
 
     
 @_check_cmap
-def lut_colors( colors, cmap="usercmap1"):
+def lut_colors( colors, cmap="usercmap1", num_colors=256, outfile=None):
     """
     Create a custom color lookup table that fades from each
     color listed.  The color map is loaded into the 
@@ -187,5 +187,22 @@ def lut_colors( colors, cmap="usercmap1"):
     rr = [x[0] for x in rgbs]
     gg = [x[1] for x in rgbs]
     bb = [x[2] for x in rgbs]
-    load_colormap( rr, gg, bb, cmap )
+
+    xx = np.arange(len(rr))/(len(rr)-1.0)
+    x0 = np.arange(num_colors)/(num_colors-1.0)
+    
+    rr_i = np.interp( x0, xx, rr )
+    gg_i = np.interp( x0, xx, gg )
+    bb_i = np.interp( x0, xx, bb )
+    
+    load_colormap( rr_i, gg_i, bb_i, cmap )
+
+    if None == outfile:
+        return
+    
+    lines = [ "{}\t{}\t{}\n".format(*a) for a in zip(rr_i,gg_i,bb_i) ]    
+    with open(outfile, "w") as fp:
+        fp.writelines( lines )
+    
+    
 
