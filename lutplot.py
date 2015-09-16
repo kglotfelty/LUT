@@ -398,7 +398,7 @@ class LUTPlot(object):
         set_current_plot(self.old_plot)
 
     
-    def plot( self, xx, yy, zz, name="lutpoint", zgrid=None ):
+    def plot( self, xx, yy, zz, name="lutpoint", zgrid=None, zmin=None, zmax=None ):
         """
         Plots the X, Y for each Z slice color coded by the LUT
     
@@ -444,8 +444,8 @@ class LUTPlot(object):
         nn = self.num_colors
         if not zgrid:
             # Determine the Z bins to plot; use linear/fixed bin widths
-            self.min_z = min(zz)
-            self.max_z = max(zz)    
+            self.min_z = min(zz) if None == zmin else zmin
+            self.max_z = max(zz) if None == zmax else zmax
             dt = float(self.max_z - self.min_z)/(nn-1)
             tlo = self.min_z + dt* np.arange(nn)
             thi = tlo  + dt
@@ -469,6 +469,8 @@ class LUTPlot(object):
                 close_undo_block()
                 raise ValueError("All elements of zgrid must be numbers")
         
+        
+
         #We add a curve w/ no line/symbol just to get axes setup
         add_curve( xx, yy, "symbol.style=none line.style=none stem=delme")
         self._save_limits()
@@ -570,8 +572,8 @@ class LUTPlot(object):
         self._save_limits()
             
         # We set alpha to all 0 so we don't get an image flahsed on screen
-        tmin = self.min_z if self.min_z else 0
-        tmax = self.max_z if self.max_z else 1
+        tmin = self.min_z if self.min_z != None else 0
+        tmax = self.max_z if self.max_z != None else 1
         cmap = self.cmap if self.cmap else chips_usercmap1
         add_image( tmin+np.arange(4)*((tmax-tmin)/3.0),2,2,
             "colormap={0} alpha=[0,0]".format(cmap))
