@@ -110,17 +110,17 @@ def _check_cmap(fun):
         from pychips import chips_usercmap1, chips_usercmap2, chips_usercmap3
 
         trans = { 'usercmap1' : chips_usercmap1, 'usercmap2' : chips_usercmap2, 'usercmap3' : chips_usercmap3 }
-        if cmap in trans:
+        if cmap and cmap in trans:
             cmap = trans[cmap]
         else:
-            if cmap not in [chips_usercmap1, chips_usercmap2, chips_usercmap3]:
+            if cmap and cmap not in [chips_usercmap1, chips_usercmap2, chips_usercmap3]:
                 raise ValueError("Unsupported color map slot")
 
         # Do the real work!
         fun( color, cmap, num_colors, outfile )
         
         ii = info_current()  # If any images, then change set colormap
-        if ii and any( map(lambda x: ' Image [' in x, ii.split("\n"))):
+        if cmap and ii and any( map(lambda x: ' Image [' in x, ii.split("\n"))):
             set_image( { 'colormap' : cmap } )
 
     return wrapper
