@@ -105,19 +105,24 @@ def _check_cmap(fun):
     from functools import wraps
 
     @wraps(fun)
-    def wrapper( color, cmap="usercmap1", num_colors=256, outfile=None):
+    def wrapper( color, **kwargs):
         from pychips import info_current, set_image
         from pychips import chips_usercmap1, chips_usercmap2, chips_usercmap3
 
-        trans = { 'usercmap1' : chips_usercmap1, 'usercmap2' : chips_usercmap2, 'usercmap3' : chips_usercmap3 }
-        if cmap and cmap in trans:
-            cmap = trans[cmap]
+        if "cmap" not in kwargs:
+            cmap = chips_usercmap1
+            kwargs["cmap"] = cmap
         else:
-            if cmap and cmap not in [chips_usercmap1, chips_usercmap2, chips_usercmap3]:
-                raise ValueError("Unsupported color map slot")
+            cmap = kwargs["cmap"]
+            trans = { 'usercmap1' : chips_usercmap1, 'usercmap2' : chips_usercmap2, 'usercmap3' : chips_usercmap3 }
+            if cmap and cmap in trans:
+                kwargs["cmap"] = trans[cmap]
+            else:
+                if cmap not in [chips_usercmap1, chips_usercmap2, chips_usercmap3]:
+                    raise ValueError("Unsupported color map slot")
 
         # Do the real work!
-        fun( color, cmap, num_colors, outfile )
+        fun( color, **kwargs )
         
         ii = info_current()  # If any images, then change set colormap
         if cmap and ii and any( map(lambda x: ' Image [' in x, ii.split("\n"))):
@@ -126,22 +131,39 @@ def _check_cmap(fun):
     return wrapper
 
 
-@_check_cmap
-def white_to_color(color, cmap="usercmap1", num_colors=256, outfile=None):
+def white_to_color(color, **kwargs):
     """
     Create a custom color lookup table that fades from white to 
     the specified color.  The color map is loaded into the 
-    specified slot (default="usercmap1")
+    specified user color map
     
     >>> white_to_color("darkgreen")    
-    >>> white_to_color("firebrick", chips_usercmap2)    
-    >>> white_to_color("slateblue", "usercmap3")
+    >>> white_to_color("firebrick", cmap=chips_usercmap2)    
+    >>> white_to_color("slateblue", cmap="usercmap3")
+
+    The colors can be interpolated either in the RGB color system (default)
+    or in the HSV or HLS color systems.
+    
+    >>> white_to_color("red", colorsys="rgb")
+    >>> white_to_color("red", colorsys="hsv")
+    >>> white_to_color("red", colorsys="hls")
+
+    The default is to create a lookup table with 256 colors.  
+    The number of colors can be changed using the num_color parameter
+    
+    >>> white_to_color("yellow", num_colors=16)
+    
+    The color lookup table can be saved to an ASCII file using 
+    the outfile parameter
+    
+    >>> white_to_color("purple", outfile="purple.lut")
+    
+    The outfie is always clobbered if it exists.
     """
-    lut_colors( ['white', color], cmap, num_colors, outfile)
+    lut_colors( ['white', color], **kwargs)
 
 
-@_check_cmap
-def black_to_color(color, cmap="usercmap1", num_colors=256, outfile=None):
+def black_to_color(color, **kwargs):
     """
     Create a custom color lookup table that fades from black to 
     the specified color. The color map is loaded into the 
@@ -150,12 +172,30 @@ def black_to_color(color, cmap="usercmap1", num_colors=256, outfile=None):
     >>> black_to_color("yellow")
     >>> black_to_color("firebrick", chips_usercmap2)    
     >>> black_to_color("slateblue", "usercmap3")
+
+    The colors can be interpolated either in the RGB color system (default)
+    or in the HSV or HLS color systems.
+    
+    >>> black_to_color("red", colorsys="rgb")
+    >>> black_to_color("red", colorsys="hsv")
+    >>> black_to_color("red", colorsys="hls")
+
+    The default is to create a lookup table with 256 colors.  
+    The number of colors can be changed using the num_color parameter
+    
+    >>> black_to_color("yellow", num_colors=16)
+    
+    The color lookup table can be saved to an ASCII file using 
+    the outfile parameter
+    
+    >>> black_to_color("purple", outfile="purple.lut")
+    
+    The outfie is always clobbered if it exists.
     """
-    lut_colors( ['black', color], cmap, num_colors, outfile )
+    lut_colors( ['black', color], **kwargs )
 
 
-@_check_cmap
-def black_to_color_to_white( color, cmap="usercmap1", num_colors=256, outfile=None):
+def black_to_color_to_white( color, **kwargs):
     """
     Create a custom color lookup table that fades from black to 
     the specified color to white. The color map is loaded into the 
@@ -164,37 +204,130 @@ def black_to_color_to_white( color, cmap="usercmap1", num_colors=256, outfile=No
     >>> black_to_color_to_white("firebrick")
     >>> black_to_color_to_white("magenta", chips_usercmap2)
     >>> black_to_color_to_white("orange", cmap="usercmap3")
+
+    The colors can be interpolated either in the RGB color system (default)
+    or in the HSV or HLS color systems.
+    
+    >>> black_to_color_to_white("red", colorsys="rgb")
+    >>> black_to_color_to_white("red", colorsys="hsv")
+    >>> black_to_color_to_white("red", colorsys="hls")
+
+    The default is to create a lookup table with 256 colors.  
+    The number of colors can be changed using the num_color parameter
+    
+    >>> black_to_color_to_white("yellow", num_colors=16)
+    
+    The color lookup table can be saved to an ASCII file using 
+    the outfile parameter
+    
+    >>> black_to_color_to_white("purple", outfile="purple.lut")
+    
+    The outfie is always clobbered if it exists.
     
     """
-    lut_colors( ['black', color, 'white'], cmap, num_colors, outfile )
+    lut_colors( ['black', color, 'white'], **kwargs )
+
+
+
+def _circular_interp( x0, xx, hh ):
+    # Hue values are cyclical going from 0 to 1.  To interpolate
+    # we pick the shortest path (length < 0.5) and shift the 
+    # values so that we can interpolate them.
+
+    h_out = []
+    for x in x0:
+        idx = np.where(xx<=x)[0][-1]
+        if idx == len(hh)-1:
+            hh_o = hh[-1]
+        elif hh[idx+1]-hh[idx] > 0.5 :
+            th = hh[:]
+            th[idx] = th[idx]+1
+            hh_o = np.interp( x, xx, th )
+            hh_o = np.mod( hh_o, 1.0 )
+        elif hh[idx+1]-hh[idx] < -0.5 :
+            th = hh[:]
+            th[idx+1] = th[idx+1]+1
+            hh_o = np.interp( x, xx, th )
+            hh_o = np.mod( hh_o, 1.0 )
+        else:
+            hh_o = np.interp( x, xx, hh )
+        h_out.append(hh_o)
+        
+    return np.array( h_out )
 
     
+
 @_check_cmap
-def lut_colors( colors, cmap="usercmap1", num_colors=256, outfile=None):
+def lut_colors( colors, cmap="usercmap1", num_colors=256, outfile=None, colorsys="rgb"):
     """
     Create a custom color lookup table that fades from each
-    color listed.  The color map is loaded into the 
+    color listed.  The colors are interpoalted in HSV colorspace
+    The color map is loaded into the 
     specified slot (default="usercmap1")
     
     >>> lut_colors( ["red","white","blue"] )
     >>> lut_colors( ["black","red","orange", "yellow","white"], chips_usercmap2 )
     >>> lut_colors( ["cyan", "magenta"], cmap="usercmap3" )
     
+    The colors can be interpolated either in the RGB color system (default)
+    or in the HSV or HLS color systems.
+    
+    >>> lut_colors(["pink", "cadetblue"], colorsys="rgb")
+    >>> lut_colors(["pink", "cadetblue"], colorsys="hsv")
+    >>> lut_colors(["pink", "cadetblue"], colorsys="hls")
+
+    The default is to create a lookup table with 256 colors.  
+    The number of colors can be changed using the num_color parameter
+    
+    >>> lut_colors(["yellow","mediumblue"], num_colors=16)
+    
+    The color lookup table can be saved to an ASCII file using 
+    the outfile parameter
+    
+    >>> lut_colors(["green","purple"], outfile="purple.lut")
+    
+    The outfie is always clobbered if it exists.
     """
+
+    from colorsys import rgb_to_hsv, hsv_to_rgb, rgb_to_hls, hls_to_rgb
     from pychips import load_colormap
 
-    rgbs = map( _color_to_tripple, colors )
-    rr = [x[0] for x in rgbs]
-    gg = [x[1] for x in rgbs]
-    bb = [x[2] for x in rgbs]
+    def _noop( x,y,z):  return x,y,z
 
-    xx = np.arange(len(rr))/(len(rr)-1.0)
+    rgbs = map( _color_to_tripple, colors )
+
+    if "rgb" == colorsys:
+        hsvs = rgbs
+        interp = np.interp
+        invert = _noop
+    elif "hsv" == colorsys:
+        hsvs = map( lambda x: rgb_to_hsv(*x), rgbs )
+        interp = _circular_interp
+        invert = hsv_to_rgb
+    elif "hls" == colorsys:
+        hsvs = map( lambda x: rgb_to_hls(*x), rgbs )
+        interp = _circular_interp
+        invert = hls_to_rgb
+    else:
+        raise ValueError("Unknow value of colorsys")
+
+    hh = [x[0] for x in hsvs]
+    ss = [x[1] for x in hsvs]
+    vv = [x[2] for x in hsvs]
+
+    xx = np.arange(len(hh))/(len(hh)-1.0)
     x0 = np.arange(num_colors)/(num_colors-1.0)
+
+    hh_i = interp( x0, xx, hh )
+    ss_i = np.interp( x0, xx, ss )
+    vv_i = np.interp( x0, xx, vv )
+
+    rgbs_i = map( invert, hh_i, ss_i, vv_i )
     
-    rr_i = np.interp( x0, xx, rr )
-    gg_i = np.interp( x0, xx, gg )
-    bb_i = np.interp( x0, xx, bb )
-    
+    rr_i = [x[0] for x in rgbs_i]
+    gg_i = [x[1] for x in rgbs_i]
+    bb_i = [x[2] for x in rgbs_i]
+        
     load_colormap( rr_i, gg_i, bb_i, cmap )
 
     if None == outfile:
