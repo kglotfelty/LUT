@@ -133,7 +133,6 @@ Create a color Look Up Table (LUT) coded plot in Chips.
 import numpy as np
 from pychips.advanced import open_undo_block, close_undo_block
 from pychips import *
-from pycrates import read_file, get_colvals
 from hexify import color_by_value
 
 
@@ -187,26 +186,36 @@ class LUTPlot(object):
         """
         import os as os
         import glob as glob
+        from pycrates import read_file, get_colvals
         
         tox = [ "", "{}/data/".format( os.environ["ASCDS_INSTALL"] ), 
                   "{}/data/".format(os.environ["ASCDS_CONTRIB"]),
                   "{}/.ds9/".format(os.environ["HOME"])]
 
         tox.extend(glob.glob( "{}/.ds9/LUT/*/".format( os.environ["HOME"]) ) )
-       
+
+        tab = None
         for tt in tox:
             
             try:
-                return read_file( tt+filename )
+                tab = read_file( tt+filename )
+                break
             except:
                 pass
             
             try:
-                return read_file( tt+filename+".lut")
+                tab = read_file( tt+filename+".lut")
+                break
             except:
                 pass
+
+        if tab is None:
+            raise IOError("Could not find lookup table '{}'.  Maybe try full path?".format(filename ))
         
-        raise IOError("Could not find lookup table '{}'.  Maybe try full path?".format(filename ))
+        rr = get_colvals(tab, 0)*1.0 # multiply by 1.0 detach from crate        
+        gg = get_colvals(tab, 1)*1.0
+        bb = get_colvals(tab, 2)*1.0
+        return (rr, gg, bb)
 
 
     def _create_hex_codes( self, rr, gg, bb ):
@@ -263,6 +272,29 @@ class LUTPlot(object):
         return self.hex_codes[ii]
 
 
+    @staticmethod
+    def _unzip_stuff( filename ):
+        
+        if 3 != len(filename):
+            raise IndexError("The input tuple must have 3 elements")
+        
+        r = filename[0]
+        g = filename[1]
+        b = filename[2]
+
+        if len(r) != len(g) or len(r) != len(b) or len(g) != len(b):
+            raise IndexError("Must have the same number of red, green, and blue values")
+
+        if any( map( lambda x: x<0.0 or x>1.0, r )):
+            raise IndexError( "All the red values must be between 0 and 1.")
+        if any( map( lambda x: x<0.0 or x>1.0, g )):
+            raise IndexError( "All the green values must be between 0 and 1.")
+        if any( map( lambda x: x<0.0 or x>1.0, b )):
+            raise IndexError( "All the blue values must be between 0 and 1.")
+
+        return (r,g,b)
+
+
     def _get_rgb( self, filename, reverse=False, invert=False ):
         """
         Load the color lookup table.
@@ -270,10 +302,10 @@ class LUTPlot(object):
         Conver the rgb values into their 6digit hex color code
         """
 
-        myclr = self._try_hard_to_locate(filename)        
-        rr = get_colvals(myclr, 0)*1.0 # multiply by 1.0 detach from crate        
-        gg = get_colvals(myclr, 1)*1.0
-        bb = get_colvals(myclr, 2)*1.0
+        if isinstance( filename, basestring ):
+            rr,gg,bb = self._try_hard_to_locate(filename)        
+        else:
+            rr,gg,bb = self._unzip_stuff(filename)
 
         if reverse:
             rr = rr[::-1]
