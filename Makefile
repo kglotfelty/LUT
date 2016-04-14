@@ -5,7 +5,7 @@ DEV  = /data/da/Docs/scripts/dev
 
 CP_FV = /bin/cp -fv
 
-PY_SRC = __init__.py all.py color_curves.py hexify.py lutbox_whisker.py lutcolors.py lutplot.py pick_lut.py
+PY_SRC = __init__.py all.py color_curves.py hexify.py lutbox_whisker.py lutcolors.py lutplot.py pick_lut.py _utils.py
 
 all: 
 	@mkdir -p $(ROOT)/$(DEST)/
