@@ -397,8 +397,13 @@ class LUTPlot(object):
         set_current_frame(self.old_frame)
         set_current_plot(self.old_plot)
 
+
+    @staticmethod
+    def _one(x):
+        return 1
+
     
-    def plot( self, xx, yy, zz, name="lutpoint", zgrid=None, zmin=None, zmax=None ):
+    def plot( self, xx, yy, zz, stem="lutpoint", zgrid=None, zmin=None, zmax=None, sizefn=lambda x: 1, thickfn=lambda x: 1 ):
         """
         Plots the X, Y for each Z slice color coded by the LUT
     
@@ -426,9 +431,9 @@ class LUTPlot(object):
 
         A curve is created for each color.  All the curves have 
         a name that starts with the prefix "lutpoint" which can
-        be changed using the 'name' argument.
+        be changed using the 'stem' argument.
 
-        >>> plot(x, y, z, name="asoldata")
+        >>> plot(x, y, z, stem="asoldata")
         >>> info()
            ...
               Curve [asoldata1]
@@ -488,9 +493,17 @@ class LUTPlot(object):
             if len(jj) == 0:
                 all_curves.append(None)
                 continue            
-            add_curve( np.array(xx)[jj], np.array(yy)[jj], 
-                """stem={0} line.style=none symbol.style=point 
-                symbol.color={1} line.color={1}""".format(name,mycol))
+
+            cc = ChipsCurve()
+            cc.stem=stem
+            cc.line.style=None
+            cc.symbol.style="point"
+            cc.symbol.color=mycol
+            cc.line.color=mycol
+            cc.symbol.size=sizefn(ii)
+            cc.line.thickness=thickfn(ii)
+            
+            add_curve( np.array(xx)[jj], np.array(yy)[jj], cc )
             all_curves.append( self._get_current_object_name("Curve") )
     
         # save list of curves plotted
@@ -616,15 +629,29 @@ def __test():
     from paramio import pget 
     lut = LUTPlot( pget("imagej_lut", "16_equal"), cmap=chips_usercmap2)
     clear()
+    print "plot"
     lut.plot( x,y,z)
-        
+    print "add_colorbar"
     lut.add_colorbar( )
 
+    print "set_curve"
     lut.set_curve( "symbol.style=circle")
-    lut.set_curve( { 'symbol.size' : 2 } )
     
+    print "set_curve"
+    lut.set_curve( { 'symbol.size' : 2 } )
+
+    print "replace_cmap"
     lut.replace_cmap( pget("imagej_lut", "005-random"))
+
+    print "shuffle"
     lut.shuffle()
     
+
+def __intrp(x):
+    from numpy import interp
+    sizes=np.array( [1.0, 100.0] )
+    indx =np.array( [0, 255])
+    yy = interp( x, indx, sizes )
+    return( int(yy+0.5))
 
 
