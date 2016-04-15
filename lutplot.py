@@ -395,8 +395,8 @@ class LUTPlot(object):
         nn = self.num_colors
         if not zgrid:
             # Determine the Z bins to plot; use linear/fixed bin widths
-            self.min_z = min(zz) if None == zmin else zmin
-            self.max_z = max(zz) if None == zmax else zmax
+            self.min_z = min(zz) if zmin is None else zmin
+            self.max_z = max(zz) if zmax is None else zmax
             dt = float(self.max_z - self.min_z)/(nn-1)
             tlo = self.min_z + dt* np.arange(nn)
             thi = tlo  + dt
@@ -531,8 +531,8 @@ class LUTPlot(object):
         self._save_limits()
             
         # We set alpha to all 0 so we don't get an image flahsed on screen
-        tmin = self.min_z if self.min_z != None else 0
-        tmax = self.max_z if self.max_z != None else 1
+        tmin = self.min_z if self.min_z is not None else 0
+        tmax = self.max_z if self.max_z is not None else 1
         cmap = self.cmap if self.cmap else chips_usercmap1
         add_image( tmin+np.arange(4)*((tmax-tmin)/3.0),2,2,
             "colormap={0} alpha=[0,0]".format(cmap))

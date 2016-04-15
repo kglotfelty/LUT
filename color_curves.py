@@ -96,14 +96,14 @@ def _get_current_window_frame_plot():
     """
 
     crnt = info_current()
-    if None == crnt:
+    if crnt is None:
         raise RuntimeError("No {} objects to operate on".format(name))        
 
     crnt = crnt.split("\n")
     crnt_win = _find_names_in( crnt, "Window" )
     crnt_frm = _find_names_in( crnt, "Frame" )
     crnt_plot = _find_names_in( crnt, "Plot" )
-    if None == crnt_plot or len(crnt_plot) == 0:
+    if crnt_plot is None or len(crnt_plot) == 0:
         # We only need to check plot since it cannot exist with a window and frame
         raise RuntimeError("No plots")
     if len(crnt_plot) > 1 :
@@ -148,7 +148,7 @@ def _get_flat_info():
     # ride those here and reset at end.
 
     ii = info()
-    if None == ii:
+    if ii is None:
         raise RuntimeError("No {} objects to operate on".format(name))        
     ii = [ x.strip() for x in ii.split("\n")]    
     mtrx = []
