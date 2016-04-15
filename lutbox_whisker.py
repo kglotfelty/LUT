@@ -119,7 +119,7 @@ class BoxWhiskerPlot(LUTPlot):
         
         
         """
-        if None in [xx, yy]:
+        if xx is None or yy is None:
             raise ValueError("X and Y must be specified (cannot contain None's")        
         if len(xx) != len(yy):
             raise ValueError("X and Y arrays must be same length")
@@ -479,10 +479,14 @@ class BoxWhiskerPlot(LUTPlot):
         >>> b.colorize("bb")
 
         """
+        from _utils import get_rgb_hexcodes, get_rgb_values
+
+
         if cmap not in [chips_usercmap1,chips_usercmap2,chips_usercmap3]:
             raise ValueError("Invalid color map selected")
 
-        rr,gg,bb = self._get_rgb( filename, reverse=reverse, invert=invert )
+        rr,gg,bb = get_rgb_values( filename, reverse=reverse, invert=invert )
+        self.hex_codes = get_rgb_hexcodes( rr, gg, bb )
         load_colormap( rr,gg,bb, cmap )
         self.num_colors = len(self.hex_codes)
         self.filename = filename
@@ -573,8 +577,10 @@ def __test():
     b.plot()
 
 """
-xx = np.arange(10000)/1000.0
+xx = np.random.normal(5,size=10000)*10 # np.arange(10000)/1000.0
 yy = map( lambda x: np.random.poisson(x), xx)
+clear()
+
 b = BoxWhiskerPlot( xx, yy )
 b.plot()
 b.colorize("neota_sword")
