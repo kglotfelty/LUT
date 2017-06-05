@@ -183,7 +183,7 @@ class LUTPlot(object):
         """
         Store the 6digit hex color code for each curve/color
         """
-        self.hex_codes = map( color_by_value, rr, gg, bb )
+        self.hex_codes = list(map( color_by_value, rr, gg, bb ))
 
 
 
@@ -296,7 +296,7 @@ class LUTPlot(object):
         This can only be retrieved by parsing the info_current() command.
         """
         ii = info_current().split("\n")
-        ff = filter( lambda x: x.strip().startswith(name), ii )
+        ff = [x for x in ii if x.strip().startswith(name)]
         ff = ff[-1] # last one
         name = ff.split("[")[1]
         name = name.split("]")[0]
@@ -495,7 +495,7 @@ class LUTPlot(object):
 
         """
         
-        cc = map(None, self.curves)
+        cc = [None]*len(self.curves) # map(None, self.curves)
         cc.reverse()
 
         if 1 == self.order :
@@ -566,6 +566,7 @@ def __test():
     Commands to test above commands
     
     """
+    from pycrates import read_file
     #tab = read_file("/export/byobsid/15403/primary/pcadf479143901N001_asol1.fits")
     tab  = read_file("/lenin2.real/Test/Merge/repro/pcadf474115095N001_asol1.fits")
     x = tab.get_column("dy").values
@@ -575,23 +576,26 @@ def __test():
     from paramio import pget 
     lut = LUTPlot( pget("imagej_lut", "16_equal"), cmap=chips_usercmap2)
     clear()
-    print "plot"
+    print ("plot")
     lut.plot( x,y,z)
     print "add_colorbar"
     lut.add_colorbar( )
 
-    print "set_curve"
+    print ("set_curve")
     lut.set_curve( "symbol.style=circle")
     
-    print "set_curve"
+    print ("set_curve")
     lut.set_curve( { 'symbol.size' : 2 } )
 
-    print "replace_cmap"
+    print ("replace_cmap")
     lut.replace_cmap( pget("imagej_lut", "005-random"))
 
-    print "shuffle"
+    print ("shuffle")
     lut.shuffle()
     
+
+#__all__.append( "__test")
+
 
 def __intrp(x):
     from numpy import interp
