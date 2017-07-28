@@ -94,7 +94,7 @@ def color_by_name( color_name ):
     if color_name not in has:
         raise ValueError("Color '{}' was not found in '{}'".format(color_name, _colors_dot_par_))
         
-    rgb = map(float,pget( _colors_dot_par_, color_name ).split())
+    rgb = [float(x) for x in pget( _colors_dot_par_, color_name ).split()]
     
     return color_by_value( *rgb )
 
@@ -113,7 +113,7 @@ def all_colors():
 
     for color_name in has:        
         if color_name == 'mode': continue
-        rgb = map(float,pget( _colors_dot_par_, color_name ).split())
+        rgb = [float(x) for x in pget( _colors_dot_par_, color_name ).split()]
         retval[color_name] = color_by_value( *rgb )
 
     return retval
