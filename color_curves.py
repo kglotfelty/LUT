@@ -17,6 +17,10 @@
 #  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 
+from __future__ import absolute_import
+
+
+
 """
 Color all existing plot objects (curves, lines, regions, points, histograms)
 based on an external color lookup table (LUT) file.
@@ -40,7 +44,7 @@ def _sample_from_lut( lutfile, num_sample, reverse=False, invert=False, xform=_l
     Load a color lookup table and sample num_sample many colors from it.
     
     """
-    from _utils import get_rgb_hexcodes, get_rgb_values
+    from ._utils import get_rgb_hexcodes, get_rgb_values
     
     rgb = get_rgb_values( lutfile, reverse=reverse, invert=invert)
     hex_codes = get_rgb_hexcodes( *rgb )
@@ -84,7 +88,8 @@ def _find_names_in( ii, name ):
     
     """
 
-    ff = filter( lambda x: x.strip().startswith(name) , ii )
+    ff = [x for x in ii if x.strip().startswith(name) ]
+
     names = [ f.split("[")[1].split("]")[0] for f in ff ]
     return names
 
@@ -176,7 +181,9 @@ def _get_all_object_type_in_current_plot( plot_object):
     crnt_cfg = _get_current_window_frame_plot()
     flat_info = _get_flat_info()
 
-    objects_in_current_plot = filter( lambda x: x.startswith( crnt_cfg), flat_info )
+    #objects_in_current_plot = filter( lambda x: x.startswith( crnt_cfg), flat_info )
+
+    objects_in_current_plot = [x for x in flat_info if x.startswith( crnt_cfg)]
     objects_in_current_plot = [x.replace( crnt_cfg, "") for x in objects_in_current_plot]
     all_curves_in_current_plot = _find_names_in( objects_in_current_plot, plot_object)
     
