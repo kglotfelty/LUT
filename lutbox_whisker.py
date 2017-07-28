@@ -206,7 +206,9 @@ class BoxWhiskerPlot(LUTPlot):
                     raise ValueError("High grid value cannot be less than low")
         
         self.grid = grid
-        self.y0 = dict(zip(self.grid, [None]*len(self.grid)))
+        #self.y0 = dict(zip(self.grid, [None]*len(self.grid)))
+
+        self.y0 = { g:None for g in self.grid }
         self._fill_grid()
         
         if self.lut_plot:
@@ -255,7 +257,8 @@ class BoxWhiskerPlot(LUTPlot):
         self._restore_plot()
         
         if self.all_regions:
-            map( set_region, self.all_regions, [prop]*len(self.all_regions))
+            for xx in self.all_regions: 
+                set_region( xx, prop )
             self.region = get_region( self.all_regions[0] )
         else:
             self.region = prop
@@ -282,7 +285,8 @@ class BoxWhiskerPlot(LUTPlot):
         self._restore_plot()
         
         if self.all_lines:
-            map( set_line, self.all_lines, [prop]*len(self.all_lines))
+            for xx in self.all_lines:
+                set_line(xx, prop)
             self.line = get_line( self.all_lines[0] )
         else:
             self.line = prop
@@ -309,7 +313,8 @@ class BoxWhiskerPlot(LUTPlot):
         self._restore_plot()
         
         if self.all_points:
-            map( set_point, self.all_points, [prop]*len(self.all_points))
+            for xx in self.all_points:
+                set_point( xx, prop )
             self.point = get_point( self.all_points[0] )
         else:
             self.point = prop
@@ -337,7 +342,8 @@ class BoxWhiskerPlot(LUTPlot):
         self._restore_plot()
         
         if self.all_curves:
-            map( set_curve, self.all_curves, [prop]*len(self.all_curves))
+            for xx in self.all_curves:
+                set_curve( xx, prop )
             self.curve = get_curve( self.all_curves[0])
         else:
             self.curve = prop
@@ -546,13 +552,13 @@ class BoxWhiskerPlot(LUTPlot):
         
         self._restore_plot()
         if self.all_regions:
-            map( delete_region, self.all_regions)
+            for d in self.all_regions: delete_region(d)
         if self.all_lines:
-            map( delete_line, self.all_lines)
+            for d in self.all_lines: delete_line(d)
         if self.all_points:
-            map( delete_point, self.all_points )
+            for d in self.all_points: delete_point(d)
         if self.all_curves:
-            map( delete_curve, self.all_curves )
+            for d in self.all_curves: delete_curve(d)
 
         close_undo_block()
 
