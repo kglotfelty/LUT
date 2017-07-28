@@ -3,7 +3,7 @@ Utility routines that lutplot and colorcurves share
 
 """
 
-
+from __future__ import absolute_import
 
 def _try_hard_to_locate( filename ):
     """
@@ -55,11 +55,15 @@ def _unzip_stuff( filename ):
     if len(r) != len(g) or len(r) != len(b) or len(g) != len(b):
         raise IndexError("Must have the same number of red, green, and blue values")
 
-    if any( map( lambda x: x<0.0 or x>1.0, r )):
+
+    chk = [(x<0.0 or x>1.0) for x in r]
+    if any(chk):
         raise IndexError( "All the red values must be between 0 and 1.")
-    if any( map( lambda x: x<0.0 or x>1.0, g )):
+    chk = [(x<0.0 or x>1.0) for x in g]
+    if any(chk):
         raise IndexError( "All the green values must be between 0 and 1.")
-    if any( map( lambda x: x<0.0 or x>1.0, b )):
+    chk = [(x<0.0 or x>1.0) for x in b]
+    if any(chk):
         raise IndexError( "All the blue values must be between 0 and 1.")
 
     return (r,g,b)
@@ -68,12 +72,12 @@ def _create_hex_codes( rr, gg, bb ):
     """
     Store the 6digit hex color code for each curve/color
     """
-    from hexify import hexify
-    red = map( hexify, rr )
-    grn = map( hexify, gg )
-    blu = map( hexify, bb )
+    from .hexify import hexify
+    red = [hexify(x) for x in rr ]
+    grn = [hexify(x) for x in gg ]
+    blu = [hexify(x) for x in bb ]
     
-    hex_codes = map( lambda r,g,b: r+g+b, red, grn, blu )
+    hex_codes = [r+g+b for r,g,b in zip(red,grn,blu)]
     
     return hex_codes
 
@@ -90,7 +94,7 @@ def get_rgb_values( filename, reverse=False, invert=False ):
     Conver the rgb values into their 6digit hex color code
     """
 
-    if isinstance( filename, basestring ):
+    if isinstance( filename, type("foo") ):
         rr,gg,bb = _try_hard_to_locate(filename)        
     else:
         rr,gg,bb = _unzip_stuff(filename)
