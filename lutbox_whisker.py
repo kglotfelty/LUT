@@ -16,6 +16,7 @@
 #  with this program; if not, write to the Free Software Foundation, Inc.,
 #  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
+from __future__ import absolute_import, print_function
 
 
 """
@@ -28,7 +29,7 @@ import numpy as np
 from pychips.advanced import open_undo_block, close_undo_block
 from pychips import *
 from pycrates import read_file, get_colvals
-from lutplot import LUTPlot
+from .lutplot import LUTPlot
 
 
 __all__ = ["BoxWhiskerPlot"]
@@ -196,7 +197,7 @@ class BoxWhiskerPlot(LUTPlot):
 
             _lo = np.arange(nbin)*binwidth
             _hi = (1+np.arange(nbin))*binwidth
-            grid = zip( _lo, _hi )
+            grid = list(zip( _lo, _hi ))
 
         else:
             # just run some sanity checks
@@ -479,7 +480,7 @@ class BoxWhiskerPlot(LUTPlot):
         >>> b.colorize("bb")
 
         """
-        from _utils import get_rgb_hexcodes, get_rgb_values
+        from ._utils import get_rgb_hexcodes, get_rgb_values
 
 
         if cmap not in [chips_usercmap1,chips_usercmap2,chips_usercmap3]:
@@ -562,7 +563,7 @@ class BoxWhiskerPlot(LUTPlot):
         This can only be retrieved by parsing the info_current() command.
         """
         ii = info_current().split("\n")
-        ff = filter( lambda x: name in x, ii )
+        ff = [x for x in ii if name in x]
         ff = ff[-1] # last one
         name = ff.split("[")[1]
         name = name.split("]")[0]

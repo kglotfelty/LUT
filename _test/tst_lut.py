@@ -1,14 +1,15 @@
+from __future__ import print_function
 
 import sys
 #sys.path.insert( 0, "/data/lenin2/Projects/LUT")
-sys.path.insert( 0, "/data/da/Docs/scripts/dev/lib/python2.7/site-packages/")
+#sys.path.insert( 0, "/data/da/Docs/scripts/dev/lib/python2.7/site-packages/")
 
 # Load all the LUT routines 
 from chips_contrib.lut import *
 
 # Add some data to a plot
 
-for x in xrange(8):
+for x in range(8):
     x0 = np.random.rand()*20+10
     y0 = np.random.rand()*20+10
     sig = np.random.rand()*2+2
@@ -46,7 +47,7 @@ ds9 = pick_ds9()
 cmap = ds9.pick_lut()
 
 # Click on the desired color map in the CMAP2 window
-print cmap
+print(cmap)
 
 # Apply colors from LUT to each curve.
 color_curves( cmap )
@@ -73,7 +74,7 @@ redo()
 add_window()
 
 
-for x in xrange(5):
+for x in range(5):
     data = np.random.randn(1000)*1+x
     hist = np.histogram(data)
     xl = hist[1][:-1]

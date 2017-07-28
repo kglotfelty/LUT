@@ -85,7 +85,7 @@ def _color_to_tripple( color ):
 
     rgb = pget('colors.par', color )    
     rgb = rgb.split()
-    rgb = map(float, rgb)
+    rgb = [float(x) for x in rgb]
     return rgb
 
 
@@ -218,18 +218,18 @@ def lut_colors( colors, num_colors=256, colorsys="rgb"):
 
     def _noop( x,y,z):  return x,y,z
 
-    rgbs = map( _color_to_tripple, colors )
+    rgbs = [_color_to_tripple(c) for c in colors] 
 
     if "rgb" == colorsys:
         hsvs = rgbs
         interp = np.interp
         invert = _noop
     elif "hsv" == colorsys:
-        hsvs = map( lambda x: rgb_to_hsv(*x), rgbs )
+        hsvs = [ rgb_to_hsv(r,g,b) for r,g,b in rgbs ]
         interp = _circular_interp
         invert = hsv_to_rgb
     elif "hls" == colorsys:
-        hsvs = map( lambda x: rgb_to_hls(*x), rgbs )
+        hsvs = [ rgb_to_hls(r,g,b) for r,g,b in rgbs ]
         interp = _circular_interp
         invert = hls_to_rgb
     else:
@@ -246,7 +246,7 @@ def lut_colors( colors, num_colors=256, colorsys="rgb"):
     ss_i = np.interp( x0, xx, ss )
     vv_i = np.interp( x0, xx, vv )
 
-    rgbs_i = map( invert, hh_i, ss_i, vv_i )
+    rgbs_i = [invert(a,b,c) for a,b,c in zip(hh_i,ss_i,vv_i)]
     
     rr_i = [x[0] for x in rgbs_i]
     gg_i = [x[1] for x in rgbs_i]

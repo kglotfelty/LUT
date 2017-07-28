@@ -9,11 +9,11 @@ def warn_with_traceback(message, category, filename, lineno, file=None, line=Non
 
 warnings.showwarning = warn_with_traceback
 
-from lutbox_whisker import *
+from chips_contrib.lut.lutbox_whisker import *
 from chips_contrib.lut.lutcolors import *
 
 xx = np.random.normal(5,size=10000)*10 # np.arange(10000)/1000.0
-yy = map( lambda x: np.random.poisson(x), xx)
+yy = list(map( lambda x: np.random.poisson(x), xx))
 clear()
 
 b = BoxWhiskerPlot( xx, yy )

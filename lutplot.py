@@ -17,6 +17,8 @@
 #  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 
+from __future__ import absolute_import, print_function
+
 
 """
 Create a color Look Up Table (LUT) coded plot in Chips.
@@ -133,8 +135,8 @@ Create a color Look Up Table (LUT) coded plot in Chips.
 import numpy as np
 from pychips.advanced import open_undo_block, close_undo_block
 from pychips import *
-from hexify import color_by_value
-from _utils import get_rgb_hexcodes, get_rgb_values
+from .hexify import color_by_value
+from ._utils import get_rgb_hexcodes, get_rgb_values
 
 __all__ = [ "LUTPlot" ]
 
@@ -280,7 +282,7 @@ class LUTPlot(object):
             set_image(self.image, "colormap={}".format(self.cmap))
 
         nn = self.num_colors
-        for ii in xrange(nn) :
+        for ii in range(nn) :
             # Construct the color hex value
             mycol = self._get_color_code( ii) 
             if self.curves[ii]:
@@ -407,13 +409,13 @@ class LUTPlot(object):
                 close_undo_block()
                 raise ValueError("zgrid must have same number of elements as number of colors")
             
-            if not all( [len(zgrid[i]) == 2 for i in xrange(nn)] ):
+            if not all( [len(zgrid[i]) == 2 for i in range(nn)] ):
                 close_undo_block()
                 raise ValueError("zgrid must have 2 elements in each slot")
 
             try:
-                tlo = np.array( [float(zgrid[i][0]) for i in xrange(nn) ])
-                thi = np.array( [float(zgrid[i][1]) for i in xrange(nn) ])
+                tlo = np.array( [float(zgrid[i][0]) for i in range(nn) ])
+                thi = np.array( [float(zgrid[i][1]) for i in range(nn) ])
                 self.min_z = tlo[0]
                 self.max_z = thi[-1]
             except:
@@ -430,7 +432,7 @@ class LUTPlot(object):
         self.lut_win, self.lut_frame,self.lut_plot = self._get_window_info()
 
         all_curves = []    
-        for ii in xrange(nn) :
+        for ii in range(nn) :
             # Construct the color hex value
             mycol = self._get_color_code( ii )
 
@@ -578,7 +580,7 @@ def __test():
     clear()
     print ("plot")
     lut.plot( x,y,z)
-    print "add_colorbar"
+    print ("add_colorbar")
     lut.add_colorbar( )
 
     print ("set_curve")

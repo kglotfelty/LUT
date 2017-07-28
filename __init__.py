@@ -17,10 +17,19 @@
 #  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 
+from __future__ import absolute_import
 
-from hexify import *
-from color_curves import *
-from lutbox_whisker import *
-from lutcolors import *
-from lutplot import *
-from pick_lut import *
+"""
+Something useful
+
+Eventually
+
+"""
+
+from .all import *
+###from .hexify import *
+###from .color_curves import *
+###from .lutbox_whisker import *
+###from .lutcolors import *
+###from .lutplot import *
+###from .pick_lut import *

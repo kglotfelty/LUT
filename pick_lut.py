@@ -78,7 +78,7 @@ class LUT_Picker():
         This can only be retrieved by parsing the info_current() command.
         """
         ii = info_current().split("\n")
-        ff = filter( lambda x: x.strip().startswith(name), ii )
+        ff = [x for x in ii if x.strip().startswith(name) ]
         ff = ff[-1] # last one
         name = ff.split("[")[1]
         name = name.split("]")[0]
@@ -118,7 +118,7 @@ class LUT_Picker():
         self.lut.sort()
 
         if len(self.lut) > 100:
-            print "Only the first 100 color maps will be used"
+            print("Only the first 100 color maps will be used")
             self.lut = self.lut[:100]
 
         self.nx = int(sqrt( len(self.lut)))
@@ -184,7 +184,7 @@ class LUT_Picker():
 
         self.locations = {}
 
-        cbar = range(256)*256
+        cbar = list(range(256))*256
         for cmap in enumerate( self.lut ):
 
             iname = bname( cmap[1]).replace(".lut","")
@@ -301,7 +301,7 @@ class LUT_Picker_Chips(LUT_Picker):
         self.locations = {}
         set_window(self.win_name, "display=0")
 
-        cbar = range(256)*256
+        cbar = list(range(256))*256
         for cmap in enumerate( self.lut ):
             plt = "plot{}".format(cmap[0]+1)
             set_current_plot(plt)            
