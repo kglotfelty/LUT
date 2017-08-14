@@ -80,13 +80,33 @@ def _color_to_tripple( color ):
     """
     from paramio import pget, plist
 
-    if color not in plist("colors.par"):
-        raise ValueError("Cannot locate color='{}' in colors.par".format(color))
+    if color in plist("colors.par"):
+        rgb = pget('colors.par', color )    
+        rgb = rgb.split()
+        rgb = [float(x) for x in rgb]
+        return rgb
 
-    rgb = pget('colors.par', color )    
-    rgb = rgb.split()
-    rgb = [float(x) for x in rgb]
-    return rgb
+    if len(color.split()) == 3:
+        rgb = color.split()
+        rgb = [float(x) for x in rgb]
+        if max(rgb) > 1.0:
+            rgb = [x/255.0 for x in rgb]
+        if max(rgb) > 1.0 or min(rgb) < 0.0:
+            raise ValueError("Color values must be between 0 and 255")
+        return rgb
+
+    if len(color) == 8 and color.lower().startswith('0x') is True:
+        def __hex_to_int(cc):
+            return int( '0x'+cc, base=16 )
+        
+        rr = __hex_to_int( color[2:4])
+        gg = __hex_to_int( color[4:6])
+        bb = __hex_to_int( color[6:])
+        rgb = [ rr/255.0, gg/255.0, bb/255.0] 
+        return rgb
+    
+
+    raise ValueError("Unable to parse color value and cannot locate color='{}' in colors.par".format(color))
 
 
 
