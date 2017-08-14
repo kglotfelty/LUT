@@ -1,6 +1,6 @@
 
 
-def inc2lut( inc_file, num_colors=256, outfile=None ):
+def inc2lut( inc_file, num_colors=256, csys="rgb", outfile=None ):
     """
     
     The cpt-city archive contains various formats, the 
@@ -27,24 +27,19 @@ def inc2lut( inc_file, num_colors=256, outfile=None ):
 
     """
     import numpy
+    from chips_contrib.lut.lutcolors import lut_colors
     
-    tab = open( inc_file, "r").readlines()    
-    data = filter( lambda x: ' rgb' in x, tab )
+    tab = open( inc_file, "rb").readlines()    
+
+    data = [ x for x in tab if ' rgb' in x]    
     for tt in "[]<>,":
         data = [x.replace(tt, " ").strip() for x in  data ]
     
     data = [x.split() for x in data]
-    data = zip(*data)
 
-    idx = [ float(x) for x in data[0] ]
-    red = [ float(x) for x in data[3] ]
-    grn = [ float(x) for x in data[4] ]
-    blu = [ float(x) for x in data[5] ]
-
-    out_idx = np.arange( num_colors )/(num_colors-1.0) 
-    out_red = np.interp( out_idx, idx, red )
-    out_grn = np.interp( out_idx, idx, grn )
-    out_blu = np.interp( out_idx, idx, blu )
+    rgb = [ " ".join(x[3:6]) for x in data ]
+    
+    out_red,out_grn,out_blu = lut_colors( rgb, num_colors=num_colors, colorsys=csys ) 
     
     if outfile is None:
         if ".inc" in inc_file:
